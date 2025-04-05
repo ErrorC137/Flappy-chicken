@@ -1,20 +1,21 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-let screenW = window.innerWidth;
-let screenH = window.innerHeight;
-let scale = Math.min(screenW / 400, screenH / 600);
 canvas.width = 400;
 canvas.height = 600;
-canvas.style.width = 400 * scale + "px";
-canvas.style.height = 600 * scale + "px";
+
+// Responsive scaling
+let scale = Math.min(window.innerWidth / 400, window.innerHeight / 600);
+canvas.style.width = canvas.width * scale + "px";
+canvas.style.height = canvas.height * scale + "px";
 
 const GRAVITY = 0.5;
 const FLAP = -8;
-let chicken = { x: 50, y: 200, velocity: 0, width: 50, height: 35 };
+let chicken = { x: 50, y: 250, velocity: 0, width: 50, height: 35 };
 let pipes = [];
 let score = 0;
 let gameOver = false;
+let started = false;
 
 const chickenImg = new Image();
 chickenImg.src = "chicken_breast.png";
@@ -37,22 +38,24 @@ function drawPipe(pipe) {
 }
 
 function draw() {
-  if (gameOver) return;
+  if (!started || gameOver) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Chicken
+  // Update chicken
   chicken.velocity += GRAVITY;
   chicken.y += chicken.velocity;
   ctx.drawImage(chickenImg, chicken.x, chicken.y, chicken.width, chicken.height);
 
-  // Pipes
+  // Update pipes
   pipes.forEach(pipe => {
     pipe.x -= 2;
     drawPipe(pipe);
 
+    // Score
     if (pipe.x + pipe.width === chicken.x) score++;
 
+    // Collision
     if (
       chicken.x < pipe.x + pipe.width &&
       chicken.x + chicken.width > pipe.x &&
@@ -63,10 +66,11 @@ function draw() {
   });
 
   // Floor/ceiling
-  if (chicken.y > canvas.height || chicken.y < 0) {
+  if (chicken.y + chicken.height > canvas.height || chicken.y < 0) {
     endGame();
   }
 
+  // Score
   ctx.fillStyle = "#fff";
   ctx.font = "24px Arial";
   ctx.fillText("Score: " + score, 10, 30);
@@ -75,7 +79,14 @@ function draw() {
 }
 
 function flap() {
-  if (!gameOver) chicken.velocity = FLAP;
+  if (!started) {
+    started = true;
+    chicken.velocity = FLAP;
+    setInterval(createPipe, 1500);
+    draw();
+  } else {
+    chicken.velocity = FLAP;
+  }
 }
 
 function endGame() {
@@ -86,11 +97,16 @@ function endGame() {
   }, 100);
 }
 
-// Input support
+// Input
 document.addEventListener("keydown", e => {
   if (e.code === "Space") flap();
 });
 canvas.addEventListener("touchstart", flap);
 
-setInterval(createPipe, 1500);
-draw();
+// Wait for image to load before starting
+chickenImg.onload = () => {
+  ctx.drawImage(chickenImg, chicken.x, chicken.y, chicken.width, chicken.height);
+  ctx.fillStyle = "#fff";
+  ctx.font = "20px Arial";
+  ctx.fillText("Tap or Press Space to Start", 60, 300);
+};
