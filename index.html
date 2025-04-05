@@ -1,15 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flappy Chicken</title>
   <style>
-    body { margin: 0; overflow: hidden; background: skyblue; }
-    canvas { display: block; margin: auto; background: #87CEEB; }
+    body {
+      margin: 0;
+      background: #87CEEB;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      touch-action: manipulation;
+    }
+    canvas {
+      background: #87CEEB;
+      border: 2px solid #fff;
+    }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <canvas id="gameCanvas"></canvas>
   <script src="game.js"></script>
 </body>
 </html>
