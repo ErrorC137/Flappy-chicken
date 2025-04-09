@@ -1,5 +1,10 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+const video = document.createElement('video');
+video.autoplay = true;
+video.playsInline = true;
+video.style.display = 'none';
+document.body.appendChild(video);
 
 canvas.width = 400;
 canvas.height = 600;
@@ -73,9 +78,13 @@ function checkCollision(pipe) {
 }
 
 function drawGame() {
-  // Draw background
-  ctx.fillStyle = "#4EC0CA";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Draw webcam background if available
+  if (video.srcObject) {
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.fillStyle = "#4EC0CA";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 
   if (!started) {
     ctx.drawImage(chickenImg, chicken.x, chicken.y, chicken.width, chicken.height);
@@ -103,9 +112,19 @@ function drawGame() {
 
 function flap() {
   if (!started) {
-    started = true;
-    chicken.velocity = FLAP;
-    pipeInterval = setInterval(createPipe, 1500);
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+        started = true;
+        chicken.velocity = FLAP;
+        pipeInterval = setInterval(createPipe, 1500);
+      })
+      .catch(() => {
+        // Fallback if camera is denied
+        started = true;
+        chicken.velocity = FLAP;
+        pipeInterval = setInterval(createPipe, 1500);
+      });
   } else if (!gameOver) {
     chicken.velocity = FLAP;
   } else {
@@ -127,6 +146,12 @@ function resetGame() {
   score = 0;
   gameOver = false;
   started = false;
+  
+  // Stop webcam when resetting
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
+  }
 }
 
 // Input handling
